@@ -152,8 +152,14 @@ async function run() {
     locale: "zh-CN",
   });
   const page = await context.newPage();
+  const failedResponses = [];
   page.on("pageerror", (error) => {
     throw error;
+  });
+  page.on("response", (response) => {
+    if (response.status() >= 400) {
+      failedResponses.push(`${response.status()} ${response.url()}`);
+    }
   });
   await page.goto(baseUrl, { waitUntil: "networkidle" });
 
@@ -484,6 +490,7 @@ async function run() {
     .click();
   await waitForQuestion(page, 1);
   assert.equal(await page.locator("#screen-result").isVisible(), false);
+  assert.deepEqual(failedResponses, []);
 
   await context.close();
 

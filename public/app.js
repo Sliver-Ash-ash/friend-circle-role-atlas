@@ -15,6 +15,8 @@
     activeResult: null,
     saveTimer: null,
     saveRevision: 0,
+    progressRequests: new Set(),
+    submitting: false,
     generatedImage: null,
     messageResolve: null,
     busy: false,
@@ -531,30 +533,42 @@
   }
 
   function scheduleProgressSave() {
+    if (app.submitting) return;
     clearTimeout(app.saveTimer);
+    app.saveTimer = null;
     setSaveState("saving");
     app.saveTimer = setTimeout(() => {
+      app.saveTimer = null;
       persistProgress().catch(() => {});
     }, 240);
   }
 
   async function persistProgress() {
     const session = app.currentSession;
-    if (!session || session.status !== "active" || app.shared) return;
+    if (
+      !session ||
+      session.status !== "active" ||
+      app.shared ||
+      app.submitting
+    ) {
+      return;
+    }
     const revision = ++app.saveRevision;
-    try {
-      await apiRequest(
-        `/api/tests/${encodeURIComponent(session.testId)}/progress`,
-        {
-          method: "PUT",
-          token: session.testToken,
-          body: {
-            answers: session.answers,
-            currentIndex: session.currentIndex,
-          },
-          keepalive: true,
+    const request = apiRequest(
+      `/api/tests/${encodeURIComponent(session.testId)}/progress`,
+      {
+        method: "PUT",
+        token: session.testToken,
+        body: {
+          answers: session.answers,
+          currentIndex: session.currentIndex,
         },
-      );
+        keepalive: true,
+      },
+    );
+    app.progressRequests.add(request);
+    try {
+      await request;
       if (revision === app.saveRevision) setSaveState("saved");
       persistSession();
     } catch (error) {
@@ -563,7 +577,19 @@
         showToast("答题会话已失效，请重新输入密码。", "error");
       }
       throw error;
+    } finally {
+      app.progressRequests.delete(request);
     }
+  }
+
+  function clearScheduledProgress() {
+    clearTimeout(app.saveTimer);
+    app.saveTimer = null;
+  }
+
+  async function waitForProgressRequests() {
+    if (app.progressRequests.size === 0) return;
+    await Promise.allSettled([...app.progressRequests]);
   }
 
   function setSaveState(state) {
@@ -616,6 +642,10 @@
     }
 
     app.busy = true;
+    app.submitting = true;
+    app.saveRevision += 1;
+    clearScheduledProgress();
+    await waitForProgressRequests();
     showLoading("正在整理你的岗位画像");
     try {
       const result = await apiRequest(
@@ -640,6 +670,7 @@
         });
       }
     } finally {
+      app.submitting = false;
       app.busy = false;
       hideLoading();
     }
