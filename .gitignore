@@ -1,0 +1,12 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.supabase/
+supabase/.temp/
+data/state.json
+data/state.json.tmp
+data/admin.json
+data/admin.json.*.tmp
+test-results/
+playwright-report/

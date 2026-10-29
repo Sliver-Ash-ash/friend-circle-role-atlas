@@ -1,0 +1,4 @@
+project_id = "friend-circle-role-atlas"
+
+[functions.app-api]
+verify_jwt = false

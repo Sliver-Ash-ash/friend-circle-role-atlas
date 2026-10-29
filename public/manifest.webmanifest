@@ -1,0 +1,16 @@
+{
+  "name": "朋友圈岗位图鉴",
+  "short_name": "岗位图鉴",
+  "description": "看看你在好友群里最常承担什么岗位",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

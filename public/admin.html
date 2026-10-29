@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>卡密发货台｜朋友圈岗位图鉴</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./admin.css" />
+  </head>
+  <body>
+    <div class="admin-shell">
+      <header class="admin-header">
+        <a class="brand" href="./">
+          <span class="brand-mark" aria-hidden="true">FC</span>
+          <span>
+            <strong>朋友圈岗位图鉴</strong>
+            <small>卡密发货台</small>
+          </span>
+        </a>
+        <button class="button button-ghost" id="logout-button" type="button" hidden>
+          <i data-lucide="log-out" aria-hidden="true"></i>
+          退出
+        </button>
+      </header>
+
+      <main>
+        <section class="login-layout" id="login-view" aria-labelledby="login-title">
+          <div class="login-copy">
+            <p class="eyebrow">AUTOMATED DELIVERY</p>
+            <h1 id="login-title">生成卡密，上传到自动发货平台</h1>
+            <p>
+              网站只保存加密记录，明文卡密仅用于当场导出。每次按订单发放一个访问码，每个码可测评 3 次。
+            </p>
+          </div>
+          <form class="login-panel" id="login-form" novalidate>
+            <label for="admin-password">管理员密码</label>
+            <div class="input-wrap">
+              <i data-lucide="key-round" aria-hidden="true"></i>
+              <input
+                id="admin-password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="输入管理员密码"
+                required
+              />
+            </div>
+            <button class="button button-primary button-wide" id="login-button" type="submit">
+              <i data-lucide="log-in" aria-hidden="true"></i>
+              进入发货台
+            </button>
+            <p class="form-feedback" id="login-feedback" role="status"></p>
+          </form>
+        </section>
+
+        <section id="dashboard-view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">CODE INVENTORY</p>
+              <h1>卡密发货台</h1>
+              <p>在这里生成可上传到自动发货平台的卡密批次。</p>
+            </div>
+            <div class="inventory-note" id="inventory-note">
+              <i data-lucide="badge-info" aria-hidden="true"></i>
+              <span>网站统计的是实际开始测评的访问码，平台库存请以自动发货平台后台为准。</span>
+            </div>
+          </div>
+
+          <div class="metrics" aria-label="卡密使用概况">
+            <article class="metric">
+              <span>访问码总数</span>
+              <strong id="metric-total">--</strong>
+            </article>
+            <article class="metric">
+              <span>从未使用</span>
+              <strong id="metric-untouched">--</strong>
+            </article>
+            <article class="metric">
+              <span>部分使用</span>
+              <strong id="metric-partial">--</strong>
+            </article>
+            <article class="metric">
+              <span>次数耗尽</span>
+              <strong id="metric-exhausted">--</strong>
+            </article>
+          </div>
+
+          <section class="panel generator-panel" aria-labelledby="generator-title">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">NEW BATCH</p>
+                <h2 id="generator-title">生成卡密批次</h2>
+              </div>
+              <span class="limit-tag">每批建议 100 至 500 个</span>
+            </div>
+
+            <form id="generate-form" class="generator-form" novalidate>
+              <div class="field">
+                <label for="batch-label">批次名称</label>
+                <input
+                  id="batch-label"
+                  name="label"
+                  type="text"
+                  maxlength="60"
+                  placeholder="例如：小红书首发"
+                />
+              </div>
+              <div class="field">
+                <label for="batch-count">生成数量</label>
+                <input
+                  id="batch-count"
+                  name="count"
+                  type="number"
+                  min="1"
+                  max="2000"
+                  step="1"
+                  value="200"
+                  required
+                />
+              </div>
+              <div class="field field-wide">
+                <label for="test-url">用户测评网址</label>
+                <input
+                  id="test-url"
+                  name="url"
+                  type="url"
+                  inputmode="url"
+                  placeholder="https://test.example.com"
+                  required
+                />
+                <small>部署到正式域名后，请填写购买者实际打开的 HTTPS 地址。</small>
+              </div>
+              <div class="form-actions field-wide">
+                <button class="button button-primary" id="generate-button" type="submit">
+                  <i data-lucide="sparkles" aria-hidden="true"></i>
+                  生成并准备下载
+                </button>
+                <p class="form-feedback" id="generate-feedback" role="status"></p>
+              </div>
+            </form>
+
+            <div class="generation-result" id="generation-result" hidden>
+              <div class="result-summary">
+                <div class="result-icon">
+                  <i data-lucide="circle-check-big" aria-hidden="true"></i>
+                </div>
+                <div>
+                  <h3 id="result-title">卡密已生成</h3>
+                  <p>网站已写入加密记录。请立即下载并上传到自动发货平台。</p>
+                </div>
+              </div>
+              <div class="download-actions">
+                <button class="button button-primary" id="download-csv" type="button">
+                  <i data-lucide="file-spreadsheet" aria-hidden="true"></i>
+                  下载自动发货 CSV
+                </button>
+                <button class="button button-secondary" id="download-txt" type="button">
+                  <i data-lucide="file-text" aria-hidden="true"></i>
+                  下载纯卡密 TXT
+                </button>
+                <button class="button button-ghost" id="copy-template" type="button">
+                  <i data-lucide="copy" aria-hidden="true"></i>
+                  复制发货文案
+                </button>
+              </div>
+              <label class="template-label" for="delivery-template">自动发货文案</label>
+              <textarea id="delivery-template" rows="10" readonly></textarea>
+              <p class="security-warning">
+                <i data-lucide="shield-alert" aria-hidden="true"></i>
+                明文卡密不会保存在网站。下载完成后请立即上传，并妥善保管导出文件。
+              </p>
+            </div>
+          </section>
+
+          <section class="panel history-panel" aria-labelledby="history-title">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">BATCH HISTORY</p>
+                <h2 id="history-title">最近生成批次</h2>
+              </div>
+              <button class="button button-ghost" id="refresh-button" type="button">
+                <i data-lucide="refresh-cw" aria-hidden="true"></i>
+                刷新
+              </button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>批次</th>
+                    <th>数量</th>
+                    <th>已开始</th>
+                    <th>剩余测评次数</th>
+                    <th>生成时间</th>
+                    <th><span class="sr-only">操作</span></th>
+                  </tr>
+                </thead>
+                <tbody id="batch-table-body">
+                  <tr>
+                    <td colspan="6" class="empty-cell">暂无卡密批次</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <script src="./config.js"></script>
+    <script src="./backend.js"></script>
+    <script src="./vendor/lucide.min.js"></script>
+    <script src="./admin.js"></script>
+  </body>
+</html>

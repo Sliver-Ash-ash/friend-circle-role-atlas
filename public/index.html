@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta
+      name="description"
+      content="用 47 道生活化问题，看看你在好友群里最常承担什么岗位。"
+    />
+    <title>朋友圈岗位图鉴</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css" />
+    <link rel="stylesheet" href="./minimal-theme.css" />
+    <script src="./config.js"></script>
+    <script src="./backend.js"></script>
+    <script src="./vendor/lucide.min.js" defer></script>
+    <script src="./vendor/html2canvas.min.js" defer></script>
+    <script src="./app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+    <header class="app-header" id="app-header">
+      <a class="brand" href="./" aria-label="朋友圈岗位图鉴首页">
+        <span class="brand-mark" aria-hidden="true">群</span>
+        <span class="brand-copy">
+          <strong>朋友圈岗位图鉴</strong>
+          <span>FRIEND CIRCLE JOB ATLAS</span>
+        </span>
+      </a>
+      <div class="header-meta" aria-label="测评信息">
+        <span>47 题</span>
+        <i aria-hidden="true"></i>
+        <span>9 个维度</span>
+        <i aria-hidden="true"></i>
+        <span>约 7 分钟</span>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="screen screen-unlock is-active" id="screen-unlock" aria-labelledby="unlock-title">
+        <div class="gate-grid">
+          <div class="gate-story">
+            <div class="edition-label">
+              <span class="live-dot" aria-hidden="true"></span>
+              FRIEND CIRCLE EDITION · 2026
+            </div>
+            <h1 id="unlock-title">
+              朋友圈
+              <span>岗位图鉴</span>
+            </h1>
+            <p class="gate-lead">
+              不评价人缘好坏，只看在稳定好友关系中，你通常承担什么角色。
+            </p>
+            <div class="group-preview" aria-hidden="true">
+              <div class="preview-head">
+                <span>周末临时组局群</span>
+                <span>8 人</span>
+              </div>
+              <div class="preview-row preview-row-left">
+                <span class="preview-avatar avatar-a">A</span>
+                <p>周六有人出来吃饭吗？</p>
+              </div>
+              <div class="preview-row preview-row-right">
+                <p>想吃什么，我来查店。</p>
+                <span class="preview-avatar avatar-b">B</span>
+              </div>
+              <div class="preview-row preview-row-left preview-muted">
+                <span class="preview-avatar avatar-c">C</span>
+                <p>地址发我，我来导航。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="gate-panel">
+            <div class="section-index">01 / PASSCODE</div>
+            <h2>输入测试密码</h2>
+            <p class="gate-note">每组密码可开启 3 次测评，提交前都可以返回修改。</p>
+
+            <form id="unlock-form" novalidate>
+              <label for="password-input">测试密码</label>
+              <div class="password-control">
+                <i data-lucide="key-round" aria-hidden="true"></i>
+                <input
+                  id="password-input"
+                  name="password"
+                  type="password"
+                  inputmode="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  maxlength="32"
+                  placeholder="请输入密码"
+                  required
+                />
+                <button
+                  class="icon-button password-toggle"
+                  id="password-toggle"
+                  type="button"
+                  aria-label="显示密码"
+                >
+                  <i data-lucide="eye" aria-hidden="true"></i>
+                </button>
+              </div>
+              <p class="form-feedback" id="unlock-feedback" role="status"></p>
+              <button class="button button-primary button-wide" id="unlock-button" type="submit">
+                <span>验证并进入</span>
+                <i data-lucide="arrow-right" aria-hidden="true"></i>
+              </button>
+            </form>
+
+            <div class="gate-footnote">
+              <span>47 道日常场景题</span>
+              <span>12 个常规岗位</span>
+              <span>1 个隐藏结果</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen screen-welcome" id="screen-welcome" aria-labelledby="welcome-title" hidden>
+        <div class="welcome-shell">
+          <div class="welcome-main">
+            <div class="section-index section-index-light">02 / BRIEFING</div>
+            <h1 id="welcome-title">好友群里，<br />你最常承担什么角色？</h1>
+            <p>
+              请按你在熟悉好友群里的常见反应作答。答案没有好坏，更接近真实日常，岗位画像也会更准确。
+            </p>
+
+            <div class="welcome-actions">
+              <button class="button button-accent" id="start-test-button" type="button">
+                <span>开始测试</span>
+                <i data-lucide="play" aria-hidden="true"></i>
+              </button>
+              <button class="button button-ghost-light" id="resume-test-button" type="button" hidden>
+                <span>继续上次进度</span>
+                <i data-lucide="history" aria-hidden="true"></i>
+              </button>
+            </div>
+            <p class="attempts-note" id="welcome-attempts"></p>
+          </div>
+
+          <div class="welcome-side">
+            <div class="briefing-card">
+              <span class="briefing-number">47</span>
+              <div>
+                <strong>道生活场景题</strong>
+                <p>覆盖热场、共情、组织、智囊、梗力、守护、修复、省电、导航九个维度。</p>
+              </div>
+            </div>
+            <div class="briefing-card">
+              <span class="briefing-number">9</span>
+              <div>
+                <strong>维行为画像</strong>
+                <p>每题 5 级选择，系统比较你的互动习惯与各岗位目标画像。</p>
+              </div>
+            </div>
+            <div class="briefing-card">
+              <span class="briefing-number">3</span>
+              <div>
+                <strong>次本组测试机会</strong>
+                <p>每次开始会占用 1 次机会。刷新页面不会重复扣除，可继续上次进度。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen screen-quiz" id="screen-quiz" aria-labelledby="question-title" hidden>
+        <div class="quiz-shell">
+          <div class="quiz-topbar">
+            <button class="text-button" id="leave-quiz-button" type="button">
+              <i data-lucide="chevron-left" aria-hidden="true"></i>
+              <span>暂时离开</span>
+            </button>
+            <span class="save-state" id="save-state" aria-live="polite">
+              <i data-lucide="cloud-check" aria-hidden="true"></i>
+              <span>进度已保存</span>
+            </span>
+          </div>
+
+          <div class="quiz-progress">
+            <div class="progress-copy">
+              <span id="question-counter">第 1 / 47 题</span>
+              <span id="answered-counter">已答 0 题</span>
+            </div>
+            <div
+              class="progress-track"
+              role="progressbar"
+              aria-valuemin="0"
+              aria-valuemax="47"
+              aria-valuenow="0"
+              id="progress-track"
+            >
+              <span id="progress-fill"></span>
+            </div>
+          </div>
+
+          <div class="question-stage">
+            <div class="question-aside" aria-hidden="true">
+              <span id="question-number-ghost">01</span>
+              <span class="question-aside-line"></span>
+              <span id="question-dimension">热场力</span>
+            </div>
+
+            <article class="question-card">
+              <div class="question-kicker">
+                <span id="question-topic">熟悉好友群的日常反应</span>
+                <button class="icon-text-button" id="open-overview-button" type="button">
+                  <i data-lucide="layout-grid" aria-hidden="true"></i>
+                  <span>查看题号</span>
+                </button>
+              </div>
+              <h1 id="question-title"></h1>
+              <p class="question-helper">请选择最接近你日常状态的一项</p>
+
+              <div class="answer-scale" id="answer-scale" role="radiogroup" aria-labelledby="question-title"></div>
+
+              <div class="question-actions">
+                <button class="button button-secondary" id="previous-button" type="button">
+                  <i data-lucide="arrow-left" aria-hidden="true"></i>
+                  <span>上一题</span>
+                </button>
+                <button class="button button-primary" id="next-button" type="button">
+                  <span>下一题</span>
+                  <i data-lucide="arrow-right" aria-hidden="true"></i>
+                </button>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen screen-result" id="screen-result" aria-labelledby="result-role-name" hidden>
+        <div class="shared-banner" id="shared-banner" hidden>
+          <i data-lucide="send" aria-hidden="true"></i>
+          <span>这是一份来自好友分享的岗位结果</span>
+        </div>
+
+        <div class="result-toolbar" id="result-toolbar">
+          <div>
+            <span class="section-index">03 / RESULT</span>
+          </div>
+          <div class="result-toolbar-actions">
+            <button class="button button-primary" id="save-image-button" type="button">
+              <i data-lucide="images" aria-hidden="true"></i>
+              <span>保存 / 转发结果长图</span>
+            </button>
+          </div>
+        </div>
+
+        <article class="result-capture" id="result-capture">
+          <header class="result-hero">
+            <h1 id="result-role-name"></h1>
+            <div class="result-role-meta">
+              <span id="result-role-keywords"></span>
+            </div>
+          </header>
+
+          <section class="result-chart-section" aria-labelledby="chart-title">
+            <div class="chart-heading">
+              <div>
+                <span class="chart-kicker">ROLE TARGET PROFILE</span>
+                <h2 id="chart-title">岗位目标画像匹配图</h2>
+              </div>
+              <div class="fit-score">
+                <strong id="result-fit-score">0</strong>
+                <span>匹配分</span>
+              </div>
+            </div>
+
+            <div class="radar-panel">
+              <svg
+                id="radar-chart"
+                class="radar-chart"
+                viewBox="0 0 620 420"
+                role="img"
+                aria-label="你的九维行为分数与岗位目标画像对比图"
+              ></svg>
+            </div>
+
+            <div class="chart-legend" aria-hidden="true">
+              <span><i class="legend-user"></i>你的画像</span>
+              <span><i class="legend-target"></i>岗位目标</span>
+            </div>
+            <div class="dimension-bars" id="dimension-bars"></div>
+          </section>
+
+          <section class="result-description">
+            <div class="result-summary">
+              <h2 class="summary-label">岗位侧写</h2>
+              <p id="result-one-sentence"></p>
+              <div class="result-facts" id="result-facts"></div>
+            </div>
+
+            <div class="analysis-section emphasis-section">
+              <div class="analysis-heading">
+                <span>01</span>
+                <h2>你的高光</h2>
+              </div>
+              <p id="result-highlight"></p>
+            </div>
+
+            <div class="analysis-section">
+              <div class="analysis-heading">
+                <span>02</span>
+                <h2>为什么是这个岗位</h2>
+              </div>
+              <p id="result-theory"></p>
+            </div>
+
+            <div class="analysis-section">
+              <div class="analysis-heading">
+                <span>03</span>
+                <h2>朋友视角</h2>
+              </div>
+              <p id="result-friend-view"></p>
+            </div>
+
+            <section class="practice-section" aria-labelledby="practice-title">
+              <div class="practice-heading">
+                <span>ACTION GUIDE</span>
+                <h2 id="practice-title">把高光用到具体场景</h2>
+              </div>
+              <div class="practice-grid">
+                <div class="practice-item">
+                  <span>适用场景</span>
+                  <p id="result-practice-scene"></p>
+                </div>
+                <div class="practice-item">
+                  <span>具体做法</span>
+                  <p id="result-practice-action"></p>
+                </div>
+                <div class="practice-item">
+                  <span>观察反馈</span>
+                  <p id="result-practice-signal"></p>
+                </div>
+              </div>
+            </section>
+
+            <div class="partner-grid">
+              <section class="partner-panel partner-panel-best">
+                <div class="analysis-heading">
+                  <span>04</span>
+                  <h2>顺手搭档</h2>
+                </div>
+                <strong class="partner-name" id="result-best-partner-name"></strong>
+                <p class="partner-description" id="result-best-partner"></p>
+              </section>
+              <section class="partner-panel partner-panel-different">
+                <div class="analysis-heading">
+                  <span>05</span>
+                  <h2>节奏不同但能互补</h2>
+                </div>
+                <strong class="partner-name" id="result-mismatch-partner-name"></strong>
+                <p class="partner-description" id="result-mismatch-partner"></p>
+              </section>
+            </div>
+
+            <section class="analysis-section electricity-section">
+              <div class="analysis-heading">
+                <span>06</span>
+                <h2>群聊电量模式</h2>
+              </div>
+              <div class="electricity-panel">
+                <span class="electricity-label">你的模式</span>
+                <h3 id="result-electricity-name"></h3>
+                <p id="result-electricity-description"></p>
+                <div class="electricity-tip">
+                  <span>相处提示</span>
+                  <p id="result-electricity-tip"></p>
+                </div>
+              </div>
+            </section>
+
+            <footer class="result-footer">
+              <div class="result-footer-brand">
+                <span class="brand-mark brand-mark-small" aria-hidden="true">群</span>
+                <div>
+                  <strong>朋友圈岗位图鉴</strong>
+                  <span>47 题 · 9 维行为画像</span>
+                </div>
+              </div>
+              <span id="result-date"></span>
+            </footer>
+          </section>
+        </article>
+
+        <div class="result-actions" id="result-actions">
+          <div class="share-action-stack">
+            <button class="button button-accent" id="share-test-button" type="button">
+              <i data-lucide="user-plus" aria-hidden="true"></i>
+              <span>邀请好友来测</span>
+            </button>
+            <div class="share-quota">
+              <span>邀请好友额度</span>
+              <strong id="share-quota-text">0 / 3</strong>
+            </div>
+          </div>
+          <button class="button button-secondary button-wide" id="retake-button" type="button">
+            <i data-lucide="rotate-ccw" aria-hidden="true"></i>
+            <span>再测一次</span>
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <dialog class="sheet-dialog overview-dialog" id="overview-dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="section-index">QUESTION MAP</span>
+          <h2>答题总览</h2>
+        </div>
+        <button class="icon-button" id="close-overview-button" type="button" aria-label="关闭答题总览">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <p class="dialog-note">绿色为题已作答，带外圈的是当前题。可直接跳转修改。</p>
+      <div class="question-map" id="question-map"></div>
+    </dialog>
+
+    <dialog class="confirm-dialog" id="message-dialog">
+      <span class="message-icon" id="message-icon" aria-hidden="true">
+        <i data-lucide="info"></i>
+      </span>
+      <h2 id="message-title">提示</h2>
+      <p id="message-text"></p>
+      <div class="message-actions" id="message-actions"></div>
+    </dialog>
+
+    <dialog class="sheet-dialog image-dialog" id="image-dialog">
+      <div class="dialog-head">
+        <div>
+          <span class="section-index">RESULT IMAGE</span>
+          <h2>保存或转发结果长图</h2>
+        </div>
+        <button class="icon-button" id="close-image-button" type="button" aria-label="关闭长图预览">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <p class="dialog-note" id="image-dialog-note"></p>
+      <div class="image-preview-scroll">
+        <img id="generated-image" alt="本次朋友圈岗位图鉴结果长图" />
+      </div>
+      <div class="image-dialog-actions">
+        <button class="button button-secondary" id="download-image-button" type="button">
+          <i data-lucide="download" aria-hidden="true"></i>
+          <span>保存长图</span>
+        </button>
+        <button class="button button-primary" id="share-image-button" type="button">
+          <i data-lucide="share-2" aria-hidden="true"></i>
+          <span>转发给好友</span>
+        </button>
+      </div>
+    </dialog>
+
+    <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+    <div class="loading-overlay" id="loading-overlay" hidden>
+      <span class="loading-spinner" aria-hidden="true"></span>
+      <p id="loading-text">正在整理你的岗位画像</p>
+    </div>
+
+    <noscript>
+      <div class="noscript-message">需要启用 JavaScript 才能完成测评。</div>
+    </noscript>
+  </body>
+</html>
