@@ -18,6 +18,8 @@ const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || "127.0.0.1";
 const MAX_TESTS_PER_PASSWORD = 3;
 const MAX_SHARES_PER_RESULT = 3;
+const PUBLIC_START_LIMIT = 30;
+const PUBLIC_START_WINDOW_MS = 10 * 60 * 1000;
 const UNLOCK_TTL_MS = 24 * 60 * 60 * 1000;
 const ADMIN_TOKEN_TTL_MS = 2 * 60 * 60 * 1000;
 const ADMIN_GENERATE_LIMIT = 100;
@@ -48,6 +50,7 @@ let adminGenerationQueue = Promise.resolve();
 let passwordById = new Map();
 let passwordByLookup = new Map();
 const unlockAttempts = new Map();
+const publicStartAttempts = new Map();
 const adminLoginAttempts = new Map();
 
 const MIME_TYPES = {
@@ -556,7 +559,7 @@ function hashToken(token) {
   return crypto.createHash("sha256").update(token).digest("hex");
 }
 
-function createTestRecord(passwordId) {
+function createTestRecord(passwordId = null) {
   const token = crypto.randomBytes(32).toString("base64url");
   const test = {
     id: crypto.randomUUID(),
@@ -574,8 +577,9 @@ function createTestRecord(passwordId) {
 }
 
 function remainingForPassword(passwordId) {
+  if (!passwordId) return null;
   const password = passwordById.get(passwordId);
-  if (!password) return 0;
+  if (!password) return null;
   return Math.max(0, password.maxTests - password.usedTests);
 }
 
@@ -871,6 +875,21 @@ function recordUnlockFailure(ip) {
   entry.count += 1;
 }
 
+function checkPublicStartRateLimit(ip) {
+  const now = Date.now();
+  const entry = publicStartAttempts.get(ip);
+  if (!entry || entry.resetAt < now) {
+    publicStartAttempts.set(ip, {
+      count: 1,
+      resetAt: now + PUBLIC_START_WINDOW_MS,
+    });
+    return true;
+  }
+  if (entry.count >= PUBLIC_START_LIMIT) return false;
+  entry.count += 1;
+  return true;
+}
+
 async function findPassword(password) {
   const record = passwordByLookup.get(hashPasswordLookup(password));
   if (!record) return null;
@@ -1008,26 +1027,17 @@ async function handleApi(request, response, url) {
   }
 
   if (request.method === "POST" && url.pathname === "/api/tests/start") {
-    const body = await readJson(request);
-    const payload = verifyUnlockToken(body.unlockToken);
-    if (!payload) {
-      return sendJson(response, 401, {
-        error: "测试凭证已失效，请重新输入密码。",
+    if (!checkPublicStartRateLimit(getClientIp(request))) {
+      return sendJson(response, 429, {
+        error: "开始测试过于频繁，请十分钟后再试。",
       });
     }
-    const password = consumeAttempt(payload.passwordId);
-    if (!password) {
-      return sendJson(response, 403, {
-        error: "这个测试密码的 3 次机会已经用完。",
-        remaining: 0,
-      });
-    }
-    const { test, token } = createTestRecord(password.id);
+    const { test, token } = createTestRecord();
     await persistState();
     return sendJson(response, 201, {
       testId: test.id,
       testToken: token,
-      remaining: remainingForPassword(password.id),
+      remaining: null,
       answers: {},
       currentIndex: 0,
     });
@@ -1123,19 +1133,23 @@ async function handleApi(request, response, url) {
     if (oldTest.status !== "completed") {
       return sendJson(response, 409, { error: "请先完成当前测试。" });
     }
-    const password = consumeAttempt(oldTest.passwordId);
-    if (!password) {
-      return sendJson(response, 403, {
-        error: "这个测试密码的 3 次机会已经用完。",
-        remaining: 0,
-      });
+    let passwordId = null;
+    if (oldTest.passwordId) {
+      const password = consumeAttempt(oldTest.passwordId);
+      if (!password) {
+        return sendJson(response, 403, {
+          error: "这个测试密码的 3 次机会已经用完。",
+          remaining: 0,
+        });
+      }
+      passwordId = password.id;
     }
-    const { test, token } = createTestRecord(password.id);
+    const { test, token } = createTestRecord(passwordId);
     await persistState();
     return sendJson(response, 201, {
       testId: test.id,
       testToken: token,
-      remaining: remainingForPassword(password.id),
+      remaining: remainingForPassword(passwordId),
       answers: {},
       currentIndex: 0,
     });
@@ -1319,7 +1333,7 @@ async function startServer() {
   return new Promise((resolve) => {
     server.listen(PORT, HOST, () => {
       console.log(
-        `朋友圈岗位图鉴运行中：http://${HOST}:${PORT}（密码使用上限 ${MAX_TESTS_PER_PASSWORD} 次）`,
+        `朋友圈岗位图鉴运行中：http://${HOST}:${PORT}`,
       );
       resolve(server);
     });

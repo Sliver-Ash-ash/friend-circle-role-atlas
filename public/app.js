@@ -2,15 +2,13 @@
   "use strict";
 
   const STORAGE_KEYS = {
-    unlock: "friend-circle-atlas.unlock.v1",
     session: "friend-circle-atlas.session.v1",
   };
 
   const app = {
     content: null,
-    view: "unlock",
+    view: "welcome",
     shared: false,
-    unlockContext: null,
     currentSession: null,
     activeResult: null,
     saveTimer: null,
@@ -54,15 +52,13 @@
         error instanceof ApiError
           ? error.message
           : "暂时无法连接测评服务，请稍后刷新页面。";
-      showUnlock(message);
+      showWelcome(message);
     } finally {
       hideLoading();
     }
   }
 
   function bindEvents() {
-    $("#unlock-form").addEventListener("submit", handleUnlock);
-    $("#password-toggle").addEventListener("click", togglePasswordVisibility);
     $("#start-test-button").addEventListener("click", startTest);
     $("#resume-test-button").addEventListener("click", showQuiz);
     $("#leave-quiz-button").addEventListener("click", showWelcome);
@@ -177,7 +173,7 @@
   async function restoreSession() {
     const stored = readStorage(localStorage, STORAGE_KEYS.session);
     if (!stored?.testId || !stored?.testToken) {
-      restoreUnlockContext();
+      showWelcome();
       return;
     }
 
@@ -190,7 +186,6 @@
         ...stored,
         ...test,
         answers: normalizeAnswers(test.answers),
-        unlockToken: stored.unlockToken || null,
       };
       persistSession();
 
@@ -205,94 +200,29 @@
         return;
       }
       clearSession();
-      restoreUnlockContext();
+      showWelcome();
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
         clearSession();
-        restoreUnlockContext();
+        showWelcome();
         return;
       }
       throw error;
     }
   }
 
-  function restoreUnlockContext() {
-    const stored = readStorage(sessionStorage, STORAGE_KEYS.unlock);
-    if (stored?.token && Number.isFinite(stored.remaining)) {
-      app.unlockContext = stored;
-      showWelcome();
-      return;
-    }
-    showUnlock();
-  }
-
-  async function handleUnlock(event) {
-    event.preventDefault();
-    const input = $("#password-input");
-    const feedback = $("#unlock-feedback");
-    const password = input.value.trim();
-    if (!password) {
-      feedback.textContent = "请先输入测试密码。";
-      input.focus();
-      return;
-    }
-
-    setBusyButton($("#unlock-button"), true, "正在验证");
-    feedback.textContent = "";
-    try {
-      const data = await apiRequest("/api/unlock", {
-        method: "POST",
-        body: { password },
-      });
-      app.unlockContext = {
-        token: data.unlockToken,
-        remaining: data.remaining,
-        maxTests: data.maxTests,
-        unlockedAt: Date.now(),
-      };
-      writeStorage(sessionStorage, STORAGE_KEYS.unlock, app.unlockContext);
-      input.value = "";
-      showWelcome();
-    } catch (error) {
-      feedback.textContent =
-        error instanceof ApiError
-          ? error.message
-          : "验证失败，请稍后重试。";
-      input.select();
-    } finally {
-      setBusyButton($("#unlock-button"), false, "验证并进入", "arrow-right");
-    }
-  }
-
-  function togglePasswordVisibility() {
-    const input = $("#password-input");
-    const button = $("#password-toggle");
-    const shouldShow = input.type === "password";
-    input.type = shouldShow ? "text" : "password";
-    button.setAttribute("aria-label", shouldShow ? "隐藏密码" : "显示密码");
-    button.replaceChildren(createIconElement(shouldShow ? "eye-off" : "eye"));
-    refreshIcons();
-  }
-
-  function showWelcome() {
-    if (!app.content) return;
+  function showWelcome(message = "") {
     const activeSession = app.currentSession?.status === "active";
-    const remaining = Number(
-      app.currentSession?.remaining ?? app.unlockContext?.remaining ?? 0,
-    );
     const startButton = $("#start-test-button");
     const resumeButton = $("#resume-test-button");
 
     startButton.hidden = activeSession;
-    startButton.disabled = remaining <= 0;
+    startButton.disabled = !app.content;
     resumeButton.hidden = !activeSession;
-    $("#welcome-attempts").textContent =
-      remaining > 0
-        ? `当前密码还剩 ${remaining} 次测试机会`
-        : "当前密码的 3 次测试机会已用完";
 
     activateScreen("screen-welcome", "welcome");
     document.title = "开始测试｜朋友圈岗位图鉴";
+    if (message) showToast(message, "error");
   }
 
   async function startTest() {
@@ -302,43 +232,24 @@
       return;
     }
 
-    const unlockToken =
-      app.currentSession?.unlockToken || app.unlockContext?.token;
-    if (!unlockToken) {
-      showUnlock("请重新输入密码后开始测试。");
-      return;
-    }
-
     app.busy = true;
     showLoading("正在准备第 1 题");
     try {
       const test = await apiRequest("/api/tests/start", {
         method: "POST",
-        body: { unlockToken },
       });
       app.currentSession = {
         ...test,
         answers: normalizeAnswers(test.answers),
         status: "active",
         resultId: null,
-        unlockToken,
       };
-      if (app.unlockContext) {
-        app.unlockContext.remaining = test.remaining;
-        writeStorage(sessionStorage, STORAGE_KEYS.unlock, app.unlockContext);
-      }
       persistSession();
       showQuiz();
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401) {
-        app.unlockContext = null;
-        writeStorage(sessionStorage, STORAGE_KEYS.unlock, null);
-        showUnlock("登录凭证已失效，请重新输入密码。");
-      } else {
-        await showMessage("暂时无法开始", error.message, {
-          icon: "triangle-alert",
-        });
-      }
+      await showMessage("暂时无法开始", error.message, {
+        icon: "triangle-alert",
+      });
     } finally {
       app.busy = false;
       hideLoading();
@@ -574,7 +485,7 @@
     } catch (error) {
       if (revision === app.saveRevision) setSaveState("error");
       if (error instanceof ApiError && error.status === 401) {
-        showToast("答题会话已失效，请重新输入密码。", "error");
+        showToast("答题会话已失效，请返回首页重新开始。", "error");
       }
       throw error;
     } finally {
@@ -658,12 +569,17 @@
       );
       session.status = "completed";
       session.resultId = result.id;
-      session.remaining = result.testsRemaining;
       persistSession();
       showResult(result);
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        showUnlock("答题会话已失效，请重新输入密码。");
+        clearSession();
+        await showMessage(
+          "答题会话已失效",
+          "当前答题进度已无法继续使用，请重新开始一次测试。",
+          { icon: "refresh-cw" },
+        );
+        showWelcome();
       } else {
         await showMessage("提交失败", error.message, {
           icon: "triangle-alert",
@@ -684,8 +600,6 @@
       `/api/results/${encodeURIComponent(resultId)}`,
       { token: app.currentSession.testToken },
     );
-    app.currentSession.remaining = result.testsRemaining;
-    persistSession();
     return result;
   }
 
@@ -710,14 +624,14 @@
       activateScreen("screen-result", "shared");
       document.title = `好友的岗位是「${result.role.name}」｜朋友圈岗位图鉴`;
     } catch (error) {
-      showUnlock(
+      const message =
         error instanceof ApiError && error.status === 404
           ? "这个分享链接无效或已失效。"
-          : "暂时无法打开分享结果。",
-      );
-      if (error instanceof ApiError && error.status !== 404) {
-        throw error;
-      }
+          : "暂时无法打开分享结果，请稍后再试。";
+      showWelcome();
+      await showMessage("无法打开分享结果", message, {
+        icon: "link-2-off",
+      });
     }
   }
 
@@ -1062,25 +976,9 @@
     const session = app.currentSession;
     if (!session?.resultId) return;
 
-    if (Number(session.remaining) <= 0) {
-      const action = await showMessage(
-        "本组密码的测试机会已用完",
-        "三次机会都已经使用。可以换一组密码重新开始。",
-        {
-          icon: "key-round",
-          actions: [
-            { label: "留在结果页", value: "cancel", style: "secondary" },
-            { label: "换密码再测", value: "unlock", style: "primary" },
-          ],
-        },
-      );
-      if (action === "unlock") returnToUnlock();
-      return;
-    }
-
     const choice = await showMessage(
       "再测一次",
-      "本次操作会占用 1 次测试机会，当前结果页会切换到新一轮答题。",
+      "将开始一轮全新的答题，当前结果页会切换为新的测试进度。",
       {
         icon: "rotate-ccw",
         actions: [
@@ -1103,33 +1001,15 @@
         answers: normalizeAnswers(test.answers),
         status: "active",
         resultId: null,
-        unlockToken: session.unlockToken,
       };
       app.activeResult = null;
       persistSession();
-      if (app.unlockContext) {
-        app.unlockContext.remaining = test.remaining;
-        writeStorage(sessionStorage, STORAGE_KEYS.unlock, app.unlockContext);
-      }
       showQuiz();
     } catch (error) {
-      if (error instanceof ApiError && error.status === 403) {
-        session.remaining = 0;
-        persistSession();
-        const action = await showMessage(
-          "本组密码的测试机会已用完",
-          error.message,
-          {
-            icon: "key-round",
-            actions: [
-              { label: "留在结果页", value: "cancel", style: "secondary" },
-              { label: "换密码再测", value: "unlock", style: "primary" },
-            ],
-          },
-        );
-        if (action === "unlock") returnToUnlock();
-      } else if (error instanceof ApiError && error.status === 401) {
-        returnToUnlock("测试会话已失效，请重新输入密码。");
+      if (error instanceof ApiError && error.status === 401) {
+        clearSession();
+        app.activeResult = null;
+        showWelcome("上次测试会话已失效，请重新开始。");
       } else {
         await showMessage("暂时无法再测", error.message, {
           icon: "triangle-alert",
@@ -1139,14 +1019,6 @@
       app.busy = false;
       hideLoading();
     }
-  }
-
-  function returnToUnlock(message = "") {
-    clearSession();
-    app.activeResult = null;
-    app.unlockContext = null;
-    writeStorage(sessionStorage, STORAGE_KEYS.unlock, null);
-    showUnlock(message);
   }
 
   async function generateAndOpenImage() {
@@ -1293,15 +1165,6 @@
     }
   }
 
-  function showUnlock(message = "") {
-    activateScreen("screen-unlock", "unlock");
-    $("#unlock-feedback").textContent = message;
-    document.title = "朋友圈岗位图鉴";
-    setTimeout(() => {
-      if (app.view === "unlock") $("#password-input").focus();
-    }, 80);
-  }
-
   function activateScreen(id, mode) {
     $$(".screen").forEach((screen) => {
       const isActive = screen.id === id;
@@ -1364,12 +1227,6 @@
       app.messageResolve = resolve;
       dialog.showModal();
     });
-  }
-
-  function setBusyButton(button, busy, label, icon) {
-    button.disabled = busy;
-    const currentIcon = icon || ($("svg", button)?.dataset.lucide || "arrow-right");
-    setButtonContent(button, label, busy ? "loader-circle" : currentIcon);
   }
 
   function setButtonContent(button, label, icon) {

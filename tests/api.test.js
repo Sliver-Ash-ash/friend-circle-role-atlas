@@ -8,8 +8,6 @@ const path = require("node:path");
 const net = require("node:net");
 
 const ROOT = path.resolve(__dirname, "..");
-const DEFAULT_PASSWORD = "CIRCLE-2026-A";
-const FLOW_PASSWORD = "CIRCLE-2026-B";
 const ADMIN_PASSWORD = "ADMIN-TEST-PASSWORD-2026";
 
 let child;
@@ -78,10 +76,9 @@ async function unlock(password) {
   return response.payload;
 }
 
-async function startTest(unlockToken) {
+async function startTest() {
   return request("/api/tests/start", {
     method: "POST",
-    body: { unlockToken },
   });
 }
 
@@ -180,26 +177,18 @@ test("内容接口只返回安全题库字段，中文和生活场景可正常�
   ]);
 });
 
-test("同一密码前三次可以开始，第四次被服务端拒绝", async () => {
-  const unlocked = await unlock(DEFAULT_PASSWORD);
-  assert.equal(unlocked.remaining, 3);
-
-  for (let index = 0; index < 3; index += 1) {
-    const started = await startTest(unlocked.unlockToken);
+test("无需访问码即可开始，公开测试不扣旧访问码次数", async () => {
+  for (let index = 0; index < 4; index += 1) {
+    const started = await startTest();
     assert.equal(started.status, 201);
-    assert.equal(started.payload.remaining, 2 - index);
+    assert.equal(started.payload.remaining, null);
     assert.ok(started.payload.testId);
     assert.ok(started.payload.testToken);
   }
-
-  const fourth = await startTest(unlocked.unlockToken);
-  assert.equal(fourth.status, 403);
-  assert.equal(fourth.payload.remaining, 0);
 });
 
-test("答题进度可保存与恢复，邀请好友使用三次额度", async () => {
-  const unlocked = await unlock(FLOW_PASSWORD);
-  const started = await startTest(unlocked.unlockToken);
+test("公开测试可保存进度、提交、分享并再次测试", async () => {
+  const started = await startTest();
   assert.equal(started.status, 201);
 
   const { testId, testToken } = started.payload;
@@ -280,7 +269,7 @@ test("答题进度可保存与恢复，邀请好友使用三次额度", async ()
     token: testToken,
   });
   assert.equal(retake.status, 201);
-  assert.equal(retake.payload.remaining, 1);
+  assert.equal(retake.payload.remaining, null);
   assert.notEqual(retake.payload.testId, testId);
 });
 

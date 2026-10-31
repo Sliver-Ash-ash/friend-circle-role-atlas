@@ -8,7 +8,6 @@ const { chromium } = require("playwright");
 
 const ROOT = path.resolve(__dirname, "..");
 const OUTPUT_DIR = path.join(ROOT, "test-results");
-const PASSWORD = "CIRCLE-2026-A";
 const EDGE_PATH = path.join(
   process.env["ProgramFiles(x86)"] || "C:\\Program Files (x86)",
   "Microsoft",
@@ -163,21 +162,11 @@ async function run() {
   });
   await page.goto(baseUrl, { waitUntil: "networkidle" });
 
-  await page.waitForSelector("#screen-unlock:not([hidden])");
-  assert.equal(
-    (await page.locator("#unlock-title").innerText()).replaceAll("\n", ""),
-    "朋友圈岗位图鉴",
-  );
-  assert.equal(
-    (await page.locator(".gate-lead").innerText()).trim(),
-    "不评价人缘好坏，只看在稳定好友关系中，你通常承担什么角色。",
-  );
-  await page.locator("#password-input").fill(PASSWORD);
-  await page.locator("#unlock-button").click();
   await page.waitForSelector("#screen-welcome:not([hidden])");
-  assert.match(
-    await page.locator("#welcome-attempts").innerText(),
-    /还剩 3 次测试机会/,
+  assert.equal(await page.locator("#screen-unlock").count(), 0);
+  assert.equal(
+    (await page.locator("body").innerText()).includes("3 次测试机会"),
+    false,
   );
 
   await page.locator("#start-test-button").click();

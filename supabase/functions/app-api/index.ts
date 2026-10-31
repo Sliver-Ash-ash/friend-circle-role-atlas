@@ -53,7 +53,7 @@ interface DbOptions {
 
 interface TestRecord {
   id: string;
-  access_code_id: string;
+  access_code_id: string | null;
   token_hash: string;
   status: string;
   answers: Record<string, number>;
@@ -64,13 +64,13 @@ interface TestRecord {
     id: string;
     max_tests: number;
     used_tests: number;
-  };
+  } | null;
 }
 
 interface ResultRecord {
   id: string;
   test_id: string;
-  access_code_id: string;
+  access_code_id: string | null;
   role_id: string;
   is_special: boolean;
   scores: Record<string, number>;
@@ -497,11 +497,14 @@ function testPayload(test: TestRecord) {
     answers: test.answers || {},
     currentIndex: Number(test.current_index) || 0,
     resultId: test.result_id,
-    remaining: Math.max(0, access.max_tests - access.used_tests),
+    remaining: access
+      ? Math.max(0, Number(access.max_tests) - Number(access.used_tests))
+      : null,
   };
 }
 
-async function getAccessCode(accessCodeId: string) {
+async function getAccessCode(accessCodeId: string | null) {
+  if (!accessCodeId) return null;
   return selectOne(
     "access_codes",
     `id=eq.${encodeURIComponent(accessCodeId)}&select=id,max_tests,used_tests`,
@@ -538,8 +541,8 @@ async function resultPayload(record: ResultRecord) {
     electricity: record.electricity,
     isSpecial: record.is_special,
     testsRemaining: accessCode
-      ? Math.max(0, accessCode.max_tests - accessCode.used_tests)
-      : 0,
+      ? Math.max(0, Number(accessCode.max_tests) - Number(accessCode.used_tests))
+      : null,
     shareCount,
     maxShares: MAX_SHARES_PER_RESULT,
     dimensionMeta: content.dimensions,
@@ -579,20 +582,25 @@ async function authenticateTest(testId: string, token: string) {
   )) as TestRecord | null;
 }
 
-async function createTest(accessCodeId: string) {
+async function createTest(accessCodeId: string | null) {
   const testId = crypto.randomUUID();
   const testToken = toBase64Url(crypto.getRandomValues(new Uint8Array(32)));
   const tokenHash = await sha256Hex(testToken);
-  const result = await rpc("start_test", {
-    p_access_code_id: accessCodeId,
-    p_test_id: testId,
-    p_token_hash: tokenHash,
-  });
+  const result = accessCodeId
+    ? await rpc("start_test", {
+        p_access_code_id: accessCodeId,
+        p_test_id: testId,
+        p_token_hash: tokenHash,
+      })
+    : await rpc("start_public_test", {
+        p_test_id: testId,
+        p_token_hash: tokenHash,
+      });
   const row = Array.isArray(result) ? result[0] : result;
   return {
     testId,
     testToken,
-    remaining: Number(row?.remaining ?? 0),
+    remaining: accessCodeId ? Number(row?.remaining ?? 0) : null,
     answers: {},
     currentIndex: 0,
   };
@@ -941,21 +949,14 @@ async function handleRequest(request: Request) {
     return handleUnlock(request, body);
   }
   if (pathname === "/api/tests/start") {
-    const token = await verifySignedToken(String(body.unlockToken || ""), "unlock");
-    if (!token) throw new ApiError(401, "测试凭证已失效，请重新输入密码。");
-    try {
-      return {
-        status: 201,
-        payload: await createTest(String(token.id)),
-      };
-    } catch (error) {
-      if (String(error).includes("ACCESS_EXHAUSTED")) {
-        throw new ApiError(403, "这个测试密码的 3 次机会已经用完。", {
-          remaining: 0,
-        });
-      }
-      throw error;
+    const ip = getClientIp(request);
+    if (!(await checkRateLimit(`public-start:${ip}`, 30, 10 * 60))) {
+      throw new ApiError(429, "开始测试过于频繁，请十分钟后再试。");
     }
+    return {
+      status: 201,
+      payload: await createTest(null),
+    };
   }
 
   const testMatch = pathname.match(/^\/api\/tests\/([^/]+)$/);

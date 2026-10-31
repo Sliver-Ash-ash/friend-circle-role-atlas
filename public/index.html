@@ -40,92 +40,13 @@
     </header>
 
     <main id="main-content">
-      <section class="screen screen-unlock is-active" id="screen-unlock" aria-labelledby="unlock-title">
-        <div class="gate-grid">
-          <div class="gate-story">
-            <div class="edition-label">
-              <span class="live-dot" aria-hidden="true"></span>
-              FRIEND CIRCLE EDITION · 2026
-            </div>
-            <h1 id="unlock-title">
-              朋友圈
-              <span>岗位图鉴</span>
-            </h1>
-            <p class="gate-lead">
-              不评价人缘好坏，只看在稳定好友关系中，你通常承担什么角色。
-            </p>
-            <div class="group-preview" aria-hidden="true">
-              <div class="preview-head">
-                <span>周末临时组局群</span>
-                <span>8 人</span>
-              </div>
-              <div class="preview-row preview-row-left">
-                <span class="preview-avatar avatar-a">A</span>
-                <p>周六有人出来吃饭吗？</p>
-              </div>
-              <div class="preview-row preview-row-right">
-                <p>想吃什么，我来查店。</p>
-                <span class="preview-avatar avatar-b">B</span>
-              </div>
-              <div class="preview-row preview-row-left preview-muted">
-                <span class="preview-avatar avatar-c">C</span>
-                <p>地址发我，我来导航。</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="gate-panel">
-            <div class="section-index">01 / PASSCODE</div>
-            <h2>输入测试密码</h2>
-            <p class="gate-note">每组密码可开启 3 次测评，提交前都可以返回修改。</p>
-
-            <form id="unlock-form" novalidate>
-              <label for="password-input">测试密码</label>
-              <div class="password-control">
-                <i data-lucide="key-round" aria-hidden="true"></i>
-                <input
-                  id="password-input"
-                  name="password"
-                  type="password"
-                  inputmode="text"
-                  autocomplete="off"
-                  spellcheck="false"
-                  maxlength="32"
-                  placeholder="请输入密码"
-                  required
-                />
-                <button
-                  class="icon-button password-toggle"
-                  id="password-toggle"
-                  type="button"
-                  aria-label="显示密码"
-                >
-                  <i data-lucide="eye" aria-hidden="true"></i>
-                </button>
-              </div>
-              <p class="form-feedback" id="unlock-feedback" role="status"></p>
-              <button class="button button-primary button-wide" id="unlock-button" type="submit">
-                <span>验证并进入</span>
-                <i data-lucide="arrow-right" aria-hidden="true"></i>
-              </button>
-            </form>
-
-            <div class="gate-footnote">
-              <span>47 道日常场景题</span>
-              <span>12 个常规岗位</span>
-              <span>1 个隐藏结果</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="screen screen-welcome" id="screen-welcome" aria-labelledby="welcome-title" hidden>
+      <section class="screen screen-welcome is-active" id="screen-welcome" aria-labelledby="welcome-title">
         <div class="welcome-shell">
           <div class="welcome-main">
-            <div class="section-index section-index-light">02 / BRIEFING</div>
+            <div class="section-index section-index-light">01 / BRIEFING</div>
             <h1 id="welcome-title">好友群里，<br />你最常承担什么角色？</h1>
             <p>
-              请按你在熟悉好友群里的常见反应作答。答案没有好坏，更接近真实日常，岗位画像也会更准确。
+              按你在熟悉好友群里的常见反应作答，不需要登录，也不会收集手机号。答案没有好坏，更接近真实日常，岗位画像也会更准确。
             </p>
 
             <div class="welcome-actions">
@@ -138,7 +59,6 @@
                 <i data-lucide="history" aria-hidden="true"></i>
               </button>
             </div>
-            <p class="attempts-note" id="welcome-attempts"></p>
           </div>
 
           <div class="welcome-side">
@@ -157,10 +77,10 @@
               </div>
             </div>
             <div class="briefing-card">
-              <span class="briefing-number">3</span>
+              <span class="briefing-number">0</span>
               <div>
-                <strong>次本组测试机会</strong>
-                <p>每次开始会占用 1 次机会。刷新页面不会重复扣除，可继续上次进度。</p>
+                <strong>项个人信息必填</strong>
+                <p>无需注册或填写手机号，打开页面即可开始。答题进度会自动保存在当前浏览器。</p>
               </div>
             </div>
           </div>
@@ -240,7 +160,7 @@
 
         <div class="result-toolbar" id="result-toolbar">
           <div>
-            <span class="section-index">03 / RESULT</span>
+            <span class="section-index">02 / RESULT</span>
           </div>
           <div class="result-toolbar-actions">
             <button class="button button-primary" id="save-image-button" type="button">
